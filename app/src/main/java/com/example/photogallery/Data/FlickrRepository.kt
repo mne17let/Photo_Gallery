@@ -1,12 +1,16 @@
 package com.example.photogallery.Data
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.photogallery.Models.GalleryItem
 import com.example.photogallery.api.FlickrAPI
 import com.example.photogallery.api.FlickrResponse
 import com.example.photogallery.api.PhotoResponse
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -67,5 +71,18 @@ class FlickrRepository {
         request.enqueue(callback)
 
         return dataFromServerLiveData
+    }
+
+    @WorkerThread
+    fun fetchImageBitmap(url: String): Bitmap? {
+        val response: Response<ResponseBody> = flickrAPI.fetchURLBytes(url).execute()
+        val stream = response.body()?.byteStream()
+        val bitmap = BitmapFactory.decodeStream(stream)
+
+        stream?.close()
+
+        Log.d(TAG, "Decoded bitmap=$bitmap from Response=$response")
+
+        return bitmap
     }
 }
