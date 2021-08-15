@@ -2,29 +2,39 @@ package com.example.photogallery.Data
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import android.util.Log
+import android.util.LruCache
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import com.example.photogallery.cache.ImageCache
 import java.util.concurrent.ConcurrentHashMap
 
 private const val NAME_OF_HANDLER_THREAD = "ImageDownloader"
 private const val MESSAGE_DOWNLOAD = 0
 
-class ThumbnailDownloader<in T>(private val responseHandler: Handler,
+class ThumbnailDownloader<T>(private val responseHandler: Handler,
                                 private val onThumbnailDownloaded:
                                  (T, Bitmap) -> Unit )
     : HandlerThread(NAME_OF_HANDLER_THREAD) {
+
+    private lateinit var imageCache: ImageCache
+
 
     private lateinit var requestHandler: Handler
     private val requestMap = ConcurrentHashMap<T, String>()
     private val flickrRepository = FlickrRepository()
 
     private var isQuit = false
+
+    fun setImageCacheInstance(ic: ImageCache){
+        imageCache = ic
+    }
 
     override fun quit(): Boolean {
         isQuit = true
@@ -56,7 +66,14 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler,
 
     private fun handleRequest(target: T) {
         val url = requestMap[target] ?: return
-        val bitmap = flickrRepository.fetchImageBitmap(url) ?: return
+
+        val bitmap: Bitmap
+        if(imageCache.getBitmapFromMemory(url) == null){
+            bitmap = flickrRepository.fetchImageBitmap(url) ?: return
+            imageCache.setBitmapToMemory(url, bitmap)
+        } else{
+            bitmap = imageCache.getBitmapFromMemory(url) ?: return
+        }
 
         responseHandler.post(
             Runnable {
@@ -68,6 +85,37 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler,
             }
         )
     }
+
+
+    /*
+    private void handleRequest(final T target) {
+    final String packageName = mRequestMap.get(target);
+    final Drawable icon;
+
+    if (packageName != null) {
+        try {
+            if (iconCache.getBitmapFromMemory(packageName) == null) {
+                icon = packageManager.getApplicationIcon(packageName);
+                iconCache.setBitmapToMemory(packageName, icon);
+            } else {
+                icon = iconCache.getBitmapFromMemory(packageName);
+            }
+            mResponseHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (mRequestMap.get(target) == null || !mRequestMap.get(target).equals(packageName)) {
+                        return;
+                    }
+                    mRequestMap.remove(target);
+                    mGetIconThreadListener.onIconDownloaded(target, icon);
+                }
+            });
+        } catch (PackageManager.NameNotFoundException | NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+}
+     */
 
     val fragmentLifecycleObserver: LifecycleObserver = object : LifecycleObserver{
         @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)

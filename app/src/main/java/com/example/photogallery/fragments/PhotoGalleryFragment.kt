@@ -24,6 +24,7 @@ import com.example.photogallery.RecyclerView.PhotoGalleryRecyclerViewAdapter
 import com.example.photogallery.RecyclerView.PhotoHolder
 import com.example.photogallery.ViewModel.PhotoGalleryViewModel
 import com.example.photogallery.api.FlickrAPI
+import com.example.photogallery.cache.CacheClassFactory
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -90,6 +91,8 @@ class PhotoGalleryFragment: Fragment() {
                 val drawable = BitmapDrawable(resources, bitmap)
                 photoHolder.bind(drawable)
         }
+
+        thumbnailDownloader.setImageCacheInstance(CacheClassFactory(this).createImageCacheClass())
 
         lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
     }
