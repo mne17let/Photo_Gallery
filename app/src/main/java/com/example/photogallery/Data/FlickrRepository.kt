@@ -63,7 +63,7 @@ class FlickrRepository {
      */
 
 
-    fun doWebRequest(request: Call<FlickrResponse>): MutableLiveData<List<GalleryItem>>{
+    private fun doWebRequest(request: Call<FlickrResponse>): MutableLiveData<List<GalleryItem>>{
         val dataFromServerLiveData: MutableLiveData<List<GalleryItem>> = MutableLiveData()
 
         val callback = object : Callback<FlickrResponse> {

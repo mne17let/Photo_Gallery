@@ -6,9 +6,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
@@ -71,6 +70,7 @@ class PhotoGalleryFragment: Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getViewModel()
+        setHasOptionsMenu(true)
         /*val flickrData: LiveData<List<GalleryItem>> = FlickrRepository().fetchInterestringPhotosFromRepository()
 
         flickrData.observe(this,
@@ -110,4 +110,46 @@ class PhotoGalleryFragment: Fragment() {
         super.onDestroyView()
         viewLifecycleOwner.lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver)
     }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.menu_toolbar_with_search, menu)
+
+        val menuItemSearch: MenuItem = menu.findItem(R.id.id_menu_item_search_view)
+        val searchView: SearchView = menuItemSearch.actionView as SearchView
+
+        searchView.setOnQueryTextListener(MyOnQueryTextListener())
+    }
+
+    inner class MyOnQueryTextListener: SearchView.OnQueryTextListener{
+        override fun onQueryTextSubmit(queryText: String): Boolean {
+            Log.d(TAG, queryText)
+            photoGalleryViewModel.downLoadImage(queryText)
+            return true
+        }
+
+        override fun onQueryTextChange(newText: String): Boolean {
+            Log.d(TAG, newText)
+            return false
+        }
+
+    }
 }
+
+/*
+ val searchItem: MenuItem = menu.findItem(R.id.menu_item_search)
+ val searchView = searchItem.actionView as SearchView
+        searchView.apply {
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(queryText: String): Boolean {
+            Log.d(TAG, "QueryTextSubmit: $queryText")
+            photoGalleryViewModel.fetchPhotos(queryText)
+            return true
+            }
+                override fun onQueryTextChange(queryText: String): Boolean {
+                Log.d(TAG, "QueryTextChange: $queryText")
+                return false
+                }
+                })
+                }
+ */
