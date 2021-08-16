@@ -71,7 +71,7 @@ class PhotoGalleryFragment: Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getViewModel()
-        /*val flickrData: LiveData<List<GalleryItem>> = FlickrRepository().fetchPhotosFromRepository()
+        /*val flickrData: LiveData<List<GalleryItem>> = FlickrRepository().fetchInterestringPhotosFromRepository()
 
         flickrData.observe(this,
             Observer { newString -> Log.d(TAG, "Ответ получен: $newString")

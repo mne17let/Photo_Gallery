@@ -7,9 +7,12 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.photogallery.Models.GalleryItem
+import com.example.photogallery.Search.SearchInterceptor
 import com.example.photogallery.api.FlickrAPI
 import com.example.photogallery.api.FlickrResponse
 import com.example.photogallery.api.PhotoResponse
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -28,19 +31,36 @@ class FlickrRepository {
     private val myLink = "https://api.flickr.com/"
 
     init {
+
+        val client: OkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(SearchInterceptor())
+            .build()
+
         val retrofit: Retrofit = Retrofit.Builder().baseUrl(myLink)
             .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
             .build()
 
         flickrAPI = retrofit.create(FlickrAPI::class.java)
     }
 
-    fun fetchPhotosFromRepository(): LiveData<List<GalleryItem>> {
+    fun fetchInterestringPhotosFromRepository(): LiveData<List<GalleryItem>> {
         val flickrHomePageRequest: Call<FlickrResponse> = flickrAPI.fetchPhotosFromAPI()
         val getLiveDataFromServer = doWebRequest(flickrHomePageRequest)
 
         return getLiveDataFromServer
     }
+
+    fun searchPhotos(query: String): LiveData<List<GalleryItem>>{
+        val searchRequest: Call<FlickrResponse> = flickrAPI.searchPhotos(query)
+        val getLiveDataFromServer = doWebRequest(searchRequest)
+
+        return getLiveDataFromServer
+    }
+
+    /*
+     fun searchPhotos(query: String): LiveData<List<GalleryItem>> {        return fetchPhotoMetadata(flickrApi.searchPhotos(query))    }
+     */
 
 
     fun doWebRequest(request: Call<FlickrResponse>): MutableLiveData<List<GalleryItem>>{
